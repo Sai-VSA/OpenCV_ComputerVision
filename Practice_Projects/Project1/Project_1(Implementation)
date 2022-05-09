@@ -1,0 +1,31 @@
+1. Setting up (main)
+    Start with getting webcam information and setting frame size/luminosity
+    Read the webcam information into two variables (success, image)
+    Create an editable copy of the image (to draw on and show)
+    Update the image frame every millisecond (while loop + waitKey(1))
+
+2. Reading Colour 
+    Create Trackbars for min and max hue, saturation, and value
+    Convert initial image from BGR to HSV and pass to function
+    Use GaussianBlur and Contouring to get object outline 
+    Adjust HSV values till only coloured area is displayed on copyImage
+    Make a global array for adjusted HSV values for given colours
+
+3. Drawing colours
+    Modify the contouring function to return x and y value of tip of shape (bounding rect)
+    Save the x and y values in an array pertaining to the colour 
+    Modify copy to have the array of colours drawn:
+        array[colourNum][n] to array[colourNum][n+1] loop if line
+        array[colourNum[n] loop if circles
+    return the copy
+
+
+Possible improvements
+    Use boxPoints function instead of just bounding to account for turning the shape
+    Add more colours to the range (possible function to ignore background? or determine colour drawn)
+
+    
+
+    
+
+     

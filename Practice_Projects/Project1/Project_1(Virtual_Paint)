@@ -1,0 +1,93 @@
+import cv2
+import numpy as np
+from cv2 import getTrackbarPos
+import colorsys
+    
+#find colours using webcam
+frameWidth = 600
+frameHeight = 450
+frameBrightness = 200
+img = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+img.set(3, frameWidth)
+img.set(4, frameHeight)
+img.set(10, frameBrightness)
+
+arr = [[], [], []]
+
+myColors = [[5, 107, 0, 19, 255, 255], #orange
+[133, 56, 0, 159, 156, 255], #purple
+[57, 76, 0, 100, 255, 255]]  #green
+
+def getContours(img, imgResult):
+    x, y, w, h = None, None, None, None
+    contours, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    #EXTERNAL retrieves extreme external contours (edge of shapes in our case), request for all or compressed values
+
+    for cnt in contours:
+        area = cv2.contourArea(cnt)
+        if area > 500: #reduces amount of noise
+            #cv2.drawContours(imgResult, cnt, -1, (255, 0, 0), 3)
+            peri = cv2.arcLength(cnt, True)
+            approx = cv2.approxPolyDP(cnt, 0.02*peri, True) ##gives the corner points #0.02 is contouring shape fitting closeness to real shape
+            x, y, w, h = cv2.boundingRect(approx) #assumes a straight rectangle
+
+    if( x and y and h and w):
+        return (x + w//2), y #center of top point
+    else:
+        return None, None
+
+def findColor(i, myColors, imgResult):  
+    m = 0
+    imgHSV = cv2.cvtColor(i, cv2.COLOR_BGR2HSV)
+    for color in myColors:
+        lower = np.array(color[0:3])
+        upper = np.array(color[3:])
+        mask = cv2.inRange(imgHSV, lower, upper)
+        x, y = getContours(mask, imgResult)
+
+        if x and y:
+            colour = colorsys.hsv_to_rgb(color[3]/179, color[4]/255, color[5]/255)
+            colour2 = [color[2], color[1], color[0]] #from rgb to bgr
+            arr[m].append([(x, y), colour2])
+        
+
+        for unit in range(len(arr[m]) - 1):
+            point1 = arr[m][unit]
+            point2 = arr[m][unit+1]
+            cv2.line(imgResult, point1[0], point2[0], point1[1], 8) #try -1 instead of cv2.FILLED
+        m = m + 1
+
+
+def fun():
+    #cv2.namedWindow('TrackBars')
+    #cv2.resizeWindow('TrackBars', 640, 240)
+
+   # cv2.createTrackbar('Hue Min', "TrackBars", 0, 179, findColor) 
+    #cv2.createTrackbar('Hue Max', "TrackBars", 179, 179, findColor) 
+   # cv2.createTrackbar('Saturation Min', "TrackBars", 0, 255, findColor) 
+   # cv2.createTrackbar('Saturation Max', "TrackBars", 255, 255, findColor) 
+   # cv2.createTrackbar('Value Min', "TrackBars", 0, 255, findColor) 
+   # cv2.createTrackbar('Value Max', "TrackBars", 255, 255, findColor) 
+
+   # h_min = getTrackbarPos('Hue Min', 'TrackBars')
+  #  h_max = getTrackbarPos('Hue Max', 'TrackBars')
+   # s_min = getTrackbarPos('Saturation Min', 'TrackBars ')
+   # s_max = getTrackbarPos('Saturation Max', 'TrackBars')
+   # v_min = getTrackbarPos('Value Min', 'TrackBars')
+   # v_max = getTrackbarPos('Value Max', 'TrackBars')
+
+
+    while (True):
+        success, frame = img.read()
+        frame = cv2.flip(frame, 1)
+        imgResult = frame.copy()
+
+        findColor(frame, myColors, imgResult)
+
+        cv2.imshow("Webcam", imgResult)
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):  #0xFF isolates the last digits to account for numLock
+            break
+
+
+fun()
